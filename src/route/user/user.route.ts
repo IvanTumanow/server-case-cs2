@@ -7,8 +7,9 @@ user.get('/:id', (c) => {
     return c.text(`User ${id}`, 200)
 })
 
-user.post('/', (c) => {
-    return c.text('User created successfully.', 201)
+user.post('/', async (c) => {
+    return c.json({
+    }, 201)
 })
 
 export default user;

@@ -1,10 +1,7 @@
-import dotenv from "dotenv"
-dotenv.config()
-
 import {type EnvKey, envSchema} from "../shared/schemas/env.schemas.js";
 
 class envConfig {
-    KEY: EnvKey | null = null;
+    KEY: EnvKey;
 
     constructor() {
         const result = envSchema.safeParse(process.env)
