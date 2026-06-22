@@ -5,26 +5,38 @@ import type {ResponseResult} from "../../shared/types/response-request.types.js"
 const user = new Hono().basePath('/')
 
 user.get('/me', async (c) => {
-    return c.text('Hello!!!')
+    if (getCookie(c, 'token')) {
+        return c.text('Hello!!!')
+    }
+
+    console.log('token', getCookie(c, 'token'));
+
+    return c.text('Unavailable!', 403)
 })
 
-user.post('/logout', (c) => {
-    const cookie = getCookie(c, 'token');
+user.post('/logout', async (c) => {
+    try {
+        deleteCookie(c, 'token', {
+            httpOnly: true,
+            secure: false,
+            maxAge: 60 * 60 * 24 * 7,
+            path: '/',
+            sameSite: 'Lax'
+        });
 
-    if (cookie) deleteCookie(c, 'token');
-    else {
+
+        return c.json({
+            success: true,
+            data: 'Выход успешно выполнен'
+        } as ResponseResult, 200)
+    } catch (error) {
         return c.json({
             success: false,
             error: {
-                details: 'Необходимые данные для выхода не найдены'
+                details: 'Ошибка при выходе'
             }
-        } as ResponseResult, 400)
+        } as ResponseResult, 500)
     }
-
-    return c.json({
-        success: true,
-        data: 'Выход успешно выполнен'
-    } as ResponseResult, 200)
 })
 
 user.post('/', async (c) => {

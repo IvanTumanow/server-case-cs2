@@ -16,17 +16,17 @@ export class Server {
     }
 
     protected middleware() {
+        this.app.use('*', cors({
+            origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+            credentials: true,
+            maxAge: 86400
+        }))
+
         this.app.use('*', compress({ encoding: 'gzip' }))
 
         this.app.use('*', logger())
 
         this.app.use('*', methodOverride({app: this.app}))
-
-        this.app.use('*', cors({
-            origin: ['http://localhost:3000'],
-            credentials: true,
-            maxAge: 86400
-        }))
 
         this.app.notFound((c) => {
             const res: ResponseResult = {
