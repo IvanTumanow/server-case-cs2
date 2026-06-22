@@ -4,7 +4,6 @@ const user = new Hono().basePath('/')
 
 user.get('/:id', (c) => {
     const id = c.req.param('id')
-
     return c.text(`User ${id}`, 200)
 })
 

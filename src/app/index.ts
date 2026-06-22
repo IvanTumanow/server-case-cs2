@@ -4,6 +4,8 @@ import user from '../route/user/user.route.js'
 
 class AppServer extends Server {
     override route(): void {
+        super.route()
+
         this.app.route('/user', user)
     }
 }

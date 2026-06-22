@@ -6,6 +6,8 @@ import { methodOverride } from 'hono/method-override'
 import { cors } from 'hono/cors'
 import type {ResponseResult} from "../shared/types/response-request.types.js";
 
+import {ENV_CONFIG} from "../config/env.config.js";
+
 export class Server {
     protected readonly app: Hono
     protected readonly port: number
@@ -37,11 +39,22 @@ export class Server {
             }
             return c.json(res, 404)
         })
+
+        this.app.onError((err, c) => {
+            console.error(`${err}`)
+            return c.json(
+                {
+                    success: false,
+                    message: err.message || 'Internal Server Error'
+                },
+                500
+            )
+        })
     }
 
     protected route() {
         this.app.get('/', (c) => {
-            return c.json({ message: 'Hello world!' }, 200)
+            return c.json({ message: 'Hello world!', d: ENV_CONFIG.KEY }, 200)
         })
     }
 
