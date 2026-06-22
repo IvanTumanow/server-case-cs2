@@ -6,6 +6,7 @@ import type {User} from "../../generated/prisma/client.js";
 import {compare, hash} from 'bcrypt'
 import jwt from "jsonwebtoken";
 import {ENV_CONFIG} from "../../config/env.config.js";
+import {setCookie} from 'hono/cookie'
 
 const auth = new Hono().basePath('/')
 
@@ -30,7 +31,7 @@ auth.post('/login', async (c) => {
 
     const verifiedUser = await prisma.user.findUnique({where: {email: validation.data.email}})
 
-    if (!verifiedUser){
+    if (!verifiedUser) {
         return c.json({
             success: false,
             error: {
@@ -53,12 +54,21 @@ auth.post('/login', async (c) => {
 
     const token: string = generateAccessToken(verifiedUser.id, verifiedUser.email)
 
+    setCookie(c, 'token', token, {
+        httpOnly: true,
+        secure: true,
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+        sameSite: 'lax'
+    })
+
+
     type UserAuthorized = Pick<User, 'createdAt' | 'email' | 'id' | 'updatedAt'>
     const {createdAt, email, id, updatedAt} = verifiedUser
 
     return c.json({
         success: true,
-        data: {email, id, token, createdAt, updatedAt, }
+        data: {email, id, createdAt, updatedAt,}
     } as ResponseResult<UserAuthorized>, 200)
 })
 
@@ -106,7 +116,7 @@ auth.post('/register', async (c) => {
     return c.json({
         success: true,
         data: user
-    } as ResponseResult< UserCreated >, 201)
+    } as ResponseResult<UserCreated>, 201)
 })
 
 export default auth;
