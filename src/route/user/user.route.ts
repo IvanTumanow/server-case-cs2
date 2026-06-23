@@ -1,14 +1,15 @@
 import {Hono} from "hono";
-import {deleteCookie, getCookie} from 'hono/cookie'
-import type {ResponseResult} from "../../shared/types/response-request.types.js";
-import {useTokenMiddleware} from "../../middleware/use-token.middleware.js";
-import type {User} from "../../generated/prisma/client.js";
+import {deleteCookie} from 'hono/cookie'
+import type {ResponseResult} from "@/shared/types/response-request.types.js";
+import {useTokenMiddleware} from "@/middleware/use-token.middleware.js";
+import type {User} from "@/generated/prisma/client.js";
+import {prisma} from "@/config/prisma-connect.config.js";
 
 type Variables = {
     user: User;
 }
 
-const user = new Hono<{Variables: Variables}>().basePath('/')
+const user = new Hono<{ Variables: Variables }>().basePath('/')
 
 user.use('*', useTokenMiddleware)
 
@@ -18,6 +19,26 @@ user.get('/me', async (c) => {
     return c.json({
         success: true,
         data: user
+    } as ResponseResult, 200)
+})
+
+user.post('/balance-up', async (c) => {
+    const {id: userId} = c.get('user')
+
+    const userAsUpdateBalance: User = await prisma.user.update({
+        where: {id: userId},
+        data: {
+            balance: {
+                increment: 1000
+            }
+        }
+    })
+
+    return c.json({
+        success: true,
+        data: {
+            userAsUpdateBalance
+        }
     } as ResponseResult, 200)
 })
 

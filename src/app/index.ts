@@ -1,7 +1,7 @@
 import {Server} from "./server.js";
 
-import user from '../route/user/user.route.js'
-import auth from "../route/auth/auth.route.js";
+import user from '@/route/user/user.route.js'
+import auth from "@/route/auth/auth.route.js";
 
 class AppServer extends Server {
     override route(): void {

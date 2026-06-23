@@ -1,4 +1,4 @@
-import {type EnvKey, envSchema} from "../shared/schemas/env.schemas.js";
+import {type EnvKey, envSchema} from "@/shared/schemas/env.schemas.js";
 
 class envConfig {
     KEY: EnvKey;

@@ -1,10 +1,10 @@
 import { createMiddleware } from 'hono/factory'
 import {getCookie} from "hono/cookie";
 import jwt from "jsonwebtoken";
-import {ENV_CONFIG} from "../config/env.config.js";
-import {prisma} from "../config/prisma-connect.config.js";
-import {tokenPayloadSchema} from "../shared/schemas/auth.schemas.js";
-import type {ResponseResult} from "../shared/types/response-request.types.js";
+import {ENV_CONFIG} from "@/config/env.config.js";
+import {prisma} from "@/config/prisma-connect.config.js";
+import {tokenPayloadSchema} from "@/shared/schemas/auth.schemas.js";
+import type {ResponseResult} from "@/shared/types/response-request.types.js";
 
 export const useTokenMiddleware = createMiddleware(async (c, next) => {
     const cookie = getCookie(c, 'token')

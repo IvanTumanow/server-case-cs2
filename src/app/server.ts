@@ -4,7 +4,7 @@ import { compress } from 'hono/compress'
 import { logger } from 'hono/logger'
 import { methodOverride } from 'hono/method-override'
 import { cors } from 'hono/cors'
-import type {ResponseResult} from "../shared/types/response-request.types.js";
+import type {ResponseResult} from "@/shared/types/response-request.types.js";
 
 export class Server {
     protected readonly app: Hono
