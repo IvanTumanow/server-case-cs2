@@ -1,17 +1,24 @@
 import {Hono} from "hono";
 import {deleteCookie, getCookie} from 'hono/cookie'
 import type {ResponseResult} from "../../shared/types/response-request.types.js";
+import {useTokenMiddleware} from "../../middleware/use-token.middleware.js";
+import type {User} from "../../generated/prisma/client.js";
 
-const user = new Hono().basePath('/')
+type Variables = {
+    user: User;
+}
+
+const user = new Hono<{Variables: Variables}>().basePath('/')
+
+user.use('*', useTokenMiddleware)
 
 user.get('/me', async (c) => {
-    if (getCookie(c, 'token')) {
-        return c.text('Hello!!!')
-    }
+    const user = c.get('user')
 
-    console.log('token', getCookie(c, 'token'));
-
-    return c.text('Unavailable!', 403)
+    return c.json({
+        success: true,
+        data: user
+    } as ResponseResult, 200)
 })
 
 user.post('/logout', async (c) => {
@@ -37,10 +44,6 @@ user.post('/logout', async (c) => {
             }
         } as ResponseResult, 500)
     }
-})
-
-user.post('/', async (c) => {
-    return c.json({}, 201)
 })
 
 export default user;

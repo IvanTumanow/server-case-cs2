@@ -43,8 +43,8 @@ export class Server {
             return c.json(
                 {
                     success: false,
-                    message: err.message || 'Internal Server Error'
-                },
+                    error: {details: err.message || 'Internal Server Error'}
+                } as ResponseResult,
                 500
             )
         })

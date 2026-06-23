@@ -1,5 +1,5 @@
 import {Hono} from "hono";
-import {authSchema, type AuthUser} from "../../shared/schemas/auth.schemas.js";
+import {authSchema, type IAuthUser} from "../../shared/schemas/auth.schemas.js";
 import type {ResponseResult} from "../../shared/types/response-request.types.js";
 import {prisma} from "../../config/prisma-connect.config.js";
 import type {User} from "../../generated/prisma/client.js";
