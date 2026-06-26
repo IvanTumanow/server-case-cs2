@@ -25,21 +25,34 @@ user.get('/me', async (c) => {
 user.post('/balance-up', async (c) => {
     const {id: userId} = c.get('user')
 
-    const userAsUpdateBalance: User = await prisma.user.update({
+    const user: Pick<User, 'lastPayoutDate'> = await prisma.user.findUniqueOrThrow({
         where: {id: userId},
-        data: {
-            balance: {
-                increment: 1000
-            }
-        }
+        select: {lastPayoutDate: true}
     })
 
-    return c.json({
-        success: true,
-        data: {
-            userAsUpdateBalance
-        }
-    } as ResponseResult, 200)
+    const now = new Date(Date.now())
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (user.lastPayoutDate === null || user.lastPayoutDate < today) {
+        const userAsUpdateBalance: User = await prisma.user.update({
+            where: {id: userId},
+            data: {
+                lastPayoutDate: today,
+                balance: {
+                    increment: 1000
+                }
+            }
+        })
+
+        return c.json({
+            success: true,
+            data: {
+                userAsUpdateBalance
+            }
+        } as ResponseResult, 200)
+    }
+
+    throw new Error('Баланс сегодня уже был пополнен')
 })
 
 user.post('/logout', async (c) => {
