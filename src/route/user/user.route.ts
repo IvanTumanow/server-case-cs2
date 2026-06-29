@@ -19,7 +19,7 @@ user.get('/me', async (c) => {
 
     return c.json({
         success: true,
-        data: user
+        data: {user}
     } as ResponseResult, 200)
 })
 

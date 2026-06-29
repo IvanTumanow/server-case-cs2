@@ -5,6 +5,7 @@ import {ENV_CONFIG} from "@/config/env.config.js";
 import {prisma} from "@/config/prisma-connect.config.js";
 import {tokenPayloadSchema} from "@/shared/schemas/auth.schemas.js";
 import type {ResponseResult} from "@/shared/types/response-request.types.js";
+import {convertQueryToSelect} from "@/utils/convertQuery.utils.js";
 
 export const useTokenMiddleware = createMiddleware(async (c, next) => {
     const cookie = getCookie(c, 'token')
@@ -16,7 +17,15 @@ export const useTokenMiddleware = createMiddleware(async (c, next) => {
 
         if (!decodedTokenValidation.success) return c.json({success: false, error: { details: 'Невалидный формат токена' }} as ResponseResult, 403)
 
-        const user = await prisma.user.findUnique({where: {id: decodedTokenValidation.data.id}})
+        const queryParams = c.req.query()
+
+        const user = await prisma.user.findUnique
+        (
+            {
+                where: {id: decodedTokenValidation.data.id},
+                select: convertQueryToSelect(queryParams)
+            }
+        )
 
         if (!user) return c.json({success: false, error: { details: 'Пользователь не найден' }} as ResponseResult, 404)
 
