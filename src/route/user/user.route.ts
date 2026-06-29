@@ -4,6 +4,7 @@ import type {ResponseResult} from "@/shared/types/response-request.types.js";
 import {useTokenMiddleware} from "@/middleware/use-token.middleware.js";
 import type {User} from "@/generated/prisma/client.js";
 import {prisma} from "@/config/prisma-connect.config.js";
+import {BALANCE_CONFIG} from "@/config/balance.config.js";
 
 type Variables = {
     user: User;
@@ -39,7 +40,7 @@ user.post('/balance-up', async (c) => {
             data: {
                 lastPayoutDate: today,
                 balance: {
-                    increment: 1000
+                    increment: BALANCE_CONFIG.ONE_TIME_PAID_TOTAL
                 }
             }
         })
@@ -47,7 +48,10 @@ user.post('/balance-up', async (c) => {
         return c.json({
             success: true,
             data: {
-                userAsUpdateBalance
+                user: userAsUpdateBalance,
+                balance: {
+                    totalPaid: BALANCE_CONFIG.ONE_TIME_PAID_TOTAL
+                }
             }
         } as ResponseResult, 200)
     }
