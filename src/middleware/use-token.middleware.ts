@@ -23,13 +23,18 @@ export const useTokenMiddleware = createMiddleware(async (c, next) => {
         (
             {
                 where: {id: decodedTokenValidation.data.id},
-                select: convertQueryToSelect(queryParams)
+                select: convertQueryToSelect(queryParams),
             }
         )
 
         if (!user) return c.json({success: false, error: { details: 'Пользователь не найден' }} as ResponseResult, 404)
 
-        c.set('user', user)
+        if (user.hasOwnProperty('password')) {
+            const {password, ...safe} = user
+
+            c.set('user', safe)
+        }
+        else c.set('user', user)
 
         await next()
     }
