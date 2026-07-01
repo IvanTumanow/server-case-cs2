@@ -23,7 +23,7 @@ user.get('/me', async (c) => {
     } as ResponseResult, 200)
 })
 
-user.post('/balance-up', async (c) => {
+user.post('/me/balance-up', async (c) => {
     const {id: userId} = c.get('user')
 
     const user: Pick<User, 'lastPayoutDate'> = await prisma.user.findUniqueOrThrow({
