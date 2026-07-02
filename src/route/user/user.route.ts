@@ -34,21 +34,19 @@ user.get('/sse-balance', async (c: Context<{Variables: Variables}>) => {
     const {id: userId} = c.get('user')
     let {balance: userLastBalance} = c.get('user')
 
-    const streamWrite = async (stream: SSEStreamingApi, isInit?: Boolean) => {
+    const streamWrite = async (stream: SSEStreamingApi) => {
         let currentEventId = 0;
 
         const resultResponse: ResponseResult = {
             success: true,
             data: {
-                user: {
-                    balance: userLastBalance
-                }
+                balance: userLastBalance
             }
         }
 
         await stream.writeSSE({
             data: JSON.stringify(resultResponse),
-            event: isInit ? 'init' : 'update',
+            event: 'balance',
             id: String(currentEventId++)
         })
     }
@@ -56,7 +54,7 @@ user.get('/sse-balance', async (c: Context<{Variables: Variables}>) => {
     return streamSSE(c, async (stream) => {
         console.log('Client stream connected')
 
-        await streamWrite(stream, true)
+        await streamWrite(stream)
 
         while (!stream.aborted) {
             const {balance: userCurrentBalance} = await prisma.user.findUniqueOrThrow({
