@@ -1,20 +1,25 @@
-import {Hono} from "hono";
+import {Context, Hono} from "hono";
 import {deleteCookie} from 'hono/cookie'
 import type {ResponseResult} from "@/shared/types/response-request.types.js";
 import {useTokenMiddleware} from "@/middleware/use-token.middleware.js";
 import type {User} from "@/generated/prisma/client.js";
 import {prisma} from "@/config/prisma-connect.config.js";
 import {BALANCE_CONFIG} from "@/config/balance.config.js";
+import {streamSSE} from "hono/streaming";
 
 type Variables = {
     user: User;
 }
 
-const user = new Hono<{ Variables: Variables }>().basePath('/')
+const user = new Hono<{ Variables: Variables }>().basePath('/me')
+
+
 
 user.use('*', useTokenMiddleware)
 
-user.get('/me', async (c) => {
+
+
+user.get('/', async (c) => {
     const user = c.get('user')
 
     return c.json({
@@ -23,7 +28,47 @@ user.get('/me', async (c) => {
     } as ResponseResult, 200)
 })
 
-user.post('/me/balance-up', async (c) => {
+
+
+user.get('/sse-balance', async (c: Context<{Variables: Variables}>) => {
+    const {id: userId} = c.get('user')
+    let userLastBalance: number = -1
+
+    return streamSSE(c, async (stream) => {
+        console.log('Client stream connected')
+
+        while (!stream.aborted) {
+            let id = 0;
+
+            const {balance: userCurrentBalance} = await prisma.user.findUniqueOrThrow({
+                where: {id: userId },
+                select: {balance: true}
+            })
+
+            if (Math.round(userCurrentBalance) !== Math.round(userLastBalance) ) {
+                userLastBalance = userCurrentBalance
+
+                await stream.writeSSE({
+                    data: JSON.stringify({balance: userCurrentBalance}),
+                    event: 'update',
+                    id: String(id++)
+                })
+            }
+
+
+            stream.onAbort(() => {
+                console.log('Client stream disconnected')
+            })
+
+
+            await stream.sleep(1000)
+        }
+    })
+})
+
+
+
+user.post('/balance-up', async (c) => {
     const {id: userId} = c.get('user')
 
     const user: Pick<User, 'lastPayoutDate'> = await prisma.user.findUniqueOrThrow({
@@ -58,6 +103,8 @@ user.post('/me/balance-up', async (c) => {
 
     throw new Error('Баланс сегодня уже был пополнен')
 })
+
+
 
 user.post('/logout', async (c) => {
     try {
