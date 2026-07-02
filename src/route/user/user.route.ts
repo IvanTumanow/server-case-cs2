@@ -5,7 +5,7 @@ import {useTokenMiddleware} from "@/middleware/use-token.middleware.js";
 import type {User} from "@/generated/prisma/client.js";
 import {prisma} from "@/config/prisma-connect.config.js";
 import {BALANCE_CONFIG} from "@/config/balance.config.js";
-import {streamSSE} from "hono/streaming";
+import {type SSEStreamingApi, streamSSE} from "hono/streaming";
 
 type Variables = {
     user: User;
@@ -32,14 +32,24 @@ user.get('/', async (c) => {
 
 user.get('/sse-balance', async (c: Context<{Variables: Variables}>) => {
     const {id: userId} = c.get('user')
-    let userLastBalance: number = -1
+    let {balance: userLastBalance} = c.get('user')
+
+    const streamWrite = async (stream: SSEStreamingApi, isInit?: Boolean) => {
+        let currentEventId = 0;
+
+        await stream.writeSSE({
+            data: JSON.stringify({balance: userLastBalance}),
+            event: isInit ? 'init' : 'update',
+            id: String(currentEventId++)
+        })
+    }
 
     return streamSSE(c, async (stream) => {
         console.log('Client stream connected')
 
-        while (!stream.aborted) {
-            let id = 0;
+        await streamWrite(stream, true)
 
+        while (!stream.aborted) {
             const {balance: userCurrentBalance} = await prisma.user.findUniqueOrThrow({
                 where: {id: userId },
                 select: {balance: true}
@@ -48,11 +58,7 @@ user.get('/sse-balance', async (c: Context<{Variables: Variables}>) => {
             if (Math.round(userCurrentBalance) !== Math.round(userLastBalance) ) {
                 userLastBalance = userCurrentBalance
 
-                await stream.writeSSE({
-                    data: JSON.stringify({balance: userCurrentBalance}),
-                    event: 'update',
-                    id: String(id++)
-                })
+                await streamWrite(stream)
             }
 
 
