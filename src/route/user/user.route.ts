@@ -37,8 +37,17 @@ user.get('/sse-balance', async (c: Context<{Variables: Variables}>) => {
     const streamWrite = async (stream: SSEStreamingApi, isInit?: Boolean) => {
         let currentEventId = 0;
 
+        const resultResponse: ResponseResult = {
+            success: true,
+            data: {
+                user: {
+                    balance: userLastBalance
+                }
+            }
+        }
+
         await stream.writeSSE({
-            data: JSON.stringify({balance: userLastBalance}),
+            data: JSON.stringify(resultResponse),
             event: isInit ? 'init' : 'update',
             id: String(currentEventId++)
         })
